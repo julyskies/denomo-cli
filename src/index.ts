@@ -4,6 +4,7 @@ import { ChildProcess, fork } from 'child_process';
 import { cpus } from 'os';
 import { stat } from 'fs/promises';
 
+import { ERROR_MESSAGES, HANDLER_TYPES } from './constants';
 import logger from './logger';
 import { MessageToParent, NodeError } from './types';
 
@@ -13,47 +14,61 @@ const MAX_WORKERS: number = cpus().length;
 let START_TIME: number;
 let WORKERS: ChildProcess[] = [];
 
-// TODO: move this to a separate file
-function handleClose(worker: ChildProcess): void | never {
-  logger('Closing worker', worker.pid);
-  WORKERS = WORKERS.filter(
-    (storedWorker: ChildProcess): boolean => worker.pid !== storedWorker.pid,
-  );
+/**
+ * Handler for the worker events
+ * @param {string} type - handler type
+ * @param {ChildProcess | string[]} payload - payload for the handler
+ * @returns {never | void}
+ */
+function handler(type: string, payload: ChildProcess | string[]): never | void {
+  if (type === HANDLER_TYPES.close) {
+    WORKERS = WORKERS.filter(
+      (storedWorker: ChildProcess): boolean => (payload as ChildProcess).pid !== storedWorker.pid,
+    );
+  }
+  if (type === HANDLER_TYPES.message && (payload as string[]).length > 0) {
+    DIRECTORIES.push(...(payload as string[]));
+  }
 
   const availableWorkers = MAX_WORKERS - WORKERS.length;
   if (availableWorkers > 0 && DIRECTORIES.length > 0) {
     const paths = DIRECTORIES.splice(0, availableWorkers);
-    logger('PATHS', paths, availableWorkers, DIRECTORIES);
+
     // eslint-disable-next-line
     for (const path of paths) {
       const newWorker = fork(`${process.cwd()}/build/worker.js`);
       newWorker.send({ path });
       newWorker.on(
-        'message',
-        ({ directories }: MessageToParent): void => {
-          DIRECTORIES.push(...directories);
-          // TODO: run workers at this point
-        },
+        HANDLER_TYPES.close,
+        (): never | void => handler(HANDLER_TYPES.close, newWorker),
       );
       newWorker.on(
-        'close',
-        (): never | void => handleClose(newWorker),
+        HANDLER_TYPES.message,
+        ({ directories }: MessageToParent): never | void => handler(
+          HANDLER_TYPES.message,
+          directories,
+        ),
       );
       WORKERS.push(newWorker);
     }
   }
-  if (DIRECTORIES.length === 0 && WORKERS.length === 0) {
+
+  if (type === HANDLER_TYPES.close && DIRECTORIES.length === 0 && WORKERS.length === 0) {
     logger(`Done in ${Date.now() - START_TIME} ms`);
     process.exit(0);
   }
 }
 
+/**
+ * Module entry
+ * @returns {Promise<Error | void>}
+ */
 async function main(): Promise<Error | void> {
   START_TIME = Date.now();
 
   const [, , entryPoint] = process.argv;
   if (entryPoint === '/') {
-    throw new Error('System root is not a valid path!');
+    throw new Error(ERROR_MESSAGES.systemRootIsNotAValidPath);
   }
 
   try {
@@ -62,10 +77,11 @@ async function main(): Promise<Error | void> {
       DIRECTORIES.push(entryPoint);
     }
   } catch (error) {
-    if ((error as NodeError).code && (error as NodeError).code === 'ENOENT') {
-      throw new Error('Provided path is invalid!');
+    const nodeError = error as NodeError;
+    if (nodeError.code && nodeError.code === 'ENOENT') {
+      throw new Error(ERROR_MESSAGES.providedPathIsInvalid);
     }
-    throw new Error('Could not access the provided path!');
+    throw new Error(ERROR_MESSAGES.couldNotAccessTheProvidedPath);
   }
 
   if (DIRECTORIES.length > 0) {
@@ -73,15 +89,15 @@ async function main(): Promise<Error | void> {
     entryWorker.send({ path: DIRECTORIES[0] });
     DIRECTORIES.splice(0);
     entryWorker.on(
-      'message',
-      ({ directories }: MessageToParent): void => {
-        DIRECTORIES.push(...directories);
-        // TODO: run workers at this point
-      },
+      HANDLER_TYPES.close,
+      (): never | void => handler(HANDLER_TYPES.close, entryWorker),
     );
     entryWorker.on(
-      'close',
-      (): never | void => handleClose(entryWorker),
+      HANDLER_TYPES.message,
+      ({ directories }: MessageToParent): never | void => handler(
+        HANDLER_TYPES.message,
+        directories,
+      ),
     );
     WORKERS.push(entryWorker);
   }

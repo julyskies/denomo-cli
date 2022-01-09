@@ -1,20 +1,18 @@
 import { readdir, rm, stat } from 'fs/promises';
 import { Stats } from 'fs';
 
-import logger from './logger';
+import { ERROR_MESSAGES, HANDLER_TYPES } from './constants';
 import { MessageToWorker } from './types';
 
 process.on(
-  'message',
+  HANDLER_TYPES.message,
   async ({ path }: MessageToWorker): Promise<Error | never> => {
-    logger('ON PATH', path);
     if (!path) {
-      throw new Error('Path is required!');
+      throw new Error(ERROR_MESSAGES.pathIsRequired);
     }
 
     const contents = await readdir(path);
     if (contents.length === 0) {
-      logger('Done!');
       return process.exit(0);
     }
 
@@ -25,7 +23,7 @@ process.on(
     );
 
     const [directories, unlinkArray] = contentStats.reduce(
-      (array, item: Stats, index: number) => {
+      (array, item: Stats, index: number): [string[], string[]] => {
         if (item.isDirectory()) {
           const [itemName] = contents[index].split('/').slice(-1);
           if (itemName === 'node_modules') {
@@ -57,7 +55,6 @@ process.on(
     if (unlinkArray.length > 0) {
       // eslint-disable-next-line
       for await (const i of unlinkArray) {
-        logger('Delete', i);
         await rm(
           i,
           {
