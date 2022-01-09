@@ -69,10 +69,14 @@ export default async function main(): Promise<Error | void> {
     throw new Error(ERROR_MESSAGES.systemRootIsNotAValidPath);
   }
 
+  const fixedEntry = entryPoint.slice(-1) === '/'
+    ? entryPoint.slice(0, entryPoint.length - 1)
+    : entryPoint;
+
   try {
-    const stats = await stat(entryPoint);
+    const stats = await stat(fixedEntry);
     if (stats.isDirectory()) {
-      DIRECTORIES.push(entryPoint);
+      DIRECTORIES.push(fixedEntry);
     }
   } catch (error) {
     const nodeError = error as NodeError;
