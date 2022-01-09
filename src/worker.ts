@@ -2,11 +2,11 @@ import { readdir, rm, stat } from 'fs/promises';
 import { Stats } from 'fs';
 
 import logger from './logger';
-import { MessageToChild } from './types';
+import { MessageToWorker } from './types';
 
 process.on(
   'message',
-  async ({ path }: MessageToChild): Promise<Error | never> => {
+  async ({ path }: MessageToWorker): Promise<Error | never> => {
     logger('ON PATH', path);
     if (!path) {
       throw new Error('Path is required!');
@@ -50,6 +50,10 @@ process.on(
       [[] as string[], [] as string[]],
     );
 
+    if (directories.length > 0 && process && process.send) {
+      process.send({ directories });
+    }
+
     if (unlinkArray.length > 0) {
       // eslint-disable-next-line
       for await (const i of unlinkArray) {
@@ -61,10 +65,6 @@ process.on(
           },
         );
       }
-    }
-
-    if (process && process.send) {
-      process?.send({ directories });
     }
 
     return process.exit(0);

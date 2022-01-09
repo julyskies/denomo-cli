@@ -5,7 +5,7 @@ import { cpus } from 'os';
 import { stat } from 'fs/promises';
 
 import logger from './logger';
-import { MessageToParent } from './types';
+import { MessageToParent, NodeError } from './types';
 
 const DIRECTORIES: string[] = [];
 const MAX_WORKERS: number = cpus().length;
@@ -13,29 +13,31 @@ const MAX_WORKERS: number = cpus().length;
 let START_TIME: number;
 let WORKERS: ChildProcess[] = [];
 
-function handleClose(worker: ChildProcess): void {
+// TODO: move this to a separate file
+function handleClose(worker: ChildProcess): void | never {
   logger('Closing worker', worker.pid);
   WORKERS = WORKERS.filter(
     (storedWorker: ChildProcess): boolean => worker.pid !== storedWorker.pid,
   );
 
-  if (DIRECTORIES.length > 0) {
-    const availableWorkers = MAX_WORKERS - WORKERS.length;
+  const availableWorkers = MAX_WORKERS - WORKERS.length;
+  if (availableWorkers > 0 && DIRECTORIES.length > 0) {
     const paths = DIRECTORIES.splice(0, availableWorkers);
     logger('PATHS', paths, availableWorkers, DIRECTORIES);
     // eslint-disable-next-line
     for (const path of paths) {
-      const newWorker = fork(`${process.cwd()}/build/parser.js`);
+      const newWorker = fork(`${process.cwd()}/build/worker.js`);
       newWorker.send({ path });
       newWorker.on(
         'message',
-        ({ directories }: MessageToParent) => {
+        ({ directories }: MessageToParent): void => {
           DIRECTORIES.push(...directories);
+          // TODO: run workers at this point
         },
       );
       newWorker.on(
         'close',
-        () => handleClose(newWorker),
+        (): never | void => handleClose(newWorker),
       );
       WORKERS.push(newWorker);
     }
@@ -46,7 +48,7 @@ function handleClose(worker: ChildProcess): void {
   }
 }
 
-async function main(): Promise<any> {
+async function main(): Promise<Error | void> {
   START_TIME = Date.now();
 
   const [, , entryPoint] = process.argv;
@@ -59,29 +61,27 @@ async function main(): Promise<any> {
     if (stats.isDirectory()) {
       DIRECTORIES.push(entryPoint);
     }
-  } catch (error: any) {
-    if (error.code && error.code === 'ENOENT') {
+  } catch (error) {
+    if ((error as NodeError).code && (error as NodeError).code === 'ENOENT') {
       throw new Error('Provided path is invalid!');
     }
     throw new Error('Could not access the provided path!');
   }
 
   if (DIRECTORIES.length > 0) {
-    const entryWorker = fork(
-      `${process.cwd()}/build/parser.js`,
-    );
+    const entryWorker = fork(`${process.cwd()}/build/worker.js`);
     entryWorker.send({ path: DIRECTORIES[0] });
     DIRECTORIES.splice(0);
     entryWorker.on(
       'message',
-      ({ directories }: any) => {
+      ({ directories }: MessageToParent): void => {
         DIRECTORIES.push(...directories);
-        logger('entryWorker message', DIRECTORIES);
+        // TODO: run workers at this point
       },
     );
     entryWorker.on(
       'close',
-      () => handleClose(entryWorker),
+      (): never | void => handleClose(entryWorker),
     );
     WORKERS.push(entryWorker);
   }
