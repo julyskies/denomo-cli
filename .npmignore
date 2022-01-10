@@ -1,0 +1,8 @@
+# Directories
+src/
+
+# Files
+.env
+.eslintrc.json
+package-lock.json
+tsconfig.json

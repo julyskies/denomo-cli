@@ -1,7 +1,7 @@
 {
   "name": "denomo-cli",
   "private": false,
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "",
   "main": "build/index.js",
   "bin": {
@@ -13,8 +13,24 @@
     "prestart": "npm run build",
     "start": "node ./build/index.js"
   },
-  "author": "",
+  "author": {
+    "name": "Peter Dyumin",
+    "url": "https://github.com/peterdee"
+  },
+  "homepage": "https://github.com/julyskies/denomo-cli",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/julyskies/denomo-cli"
+  },
+  "engines": {
+    "node": ">=10.5.0"
+  },
+  "keywords": [
+    "Denomo",
+    "Node modules",
+    "Utility"
+  ],
   "devDependencies": {
     "@types/node": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
