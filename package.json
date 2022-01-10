@@ -2,7 +2,7 @@
   "name": "denomo-cli",
   "private": false,
   "version": "1.0.0",
-  "description": "",
+  "description": "Denomo is a CLI utility that helps with deleting nested node_modules directories",
   "main": "build/index.js",
   "bin": {
     "denomo": "build/index.js"
@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint",
+    "prepublish": "npm run build",
     "prestart": "npm run build",
     "start": "node ./build/index.js"
   },
@@ -24,7 +25,7 @@
     "url": "git+https://github.com/julyskies/denomo-cli"
   },
   "engines": {
-    "node": ">=10.5.0"
+    "node": ">=14.14.0"
   },
   "keywords": [
     "Denomo",
