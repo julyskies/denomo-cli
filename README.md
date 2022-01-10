@@ -24,7 +24,8 @@ npm i -g denomo-cli
 
 ### Usage
 
-Ru
+Run Denomo from the Terminal:
+
 ```shell script
 denomo ~/path/to/projects
 ```
