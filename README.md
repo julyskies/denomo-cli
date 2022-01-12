@@ -1,6 +1,6 @@
 ## denomo-cli
 
-[![buddy pipeline](https://app.buddy.works/dunice/denomo-cli/pipelines/pipeline/368812/badge.svg?token=f79899656079152d6cd9ca9e6620cda671be74be7f08ce2d0c802c64a60296b4 "buddy pipeline")](https://app.buddy.works/dunice/denomo-cli/pipelines/pipeline/368812)
+[![buddy pipeline](https://app.buddy.works/julyskies/denomo-cli/pipelines/pipeline/368812/badge.svg?token=b92451d5bad146677bf923a48c678d65e61449fe46d76eb42b79973597af5019 "buddy pipeline")](https://app.buddy.works/julyskies/denomo-cli/pipelines/pipeline/368812)
 
 **Denomo** is a CLI utility that deletes nested `node_modules` directories
 
