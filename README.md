@@ -1,6 +1,6 @@
 ## denomo-cli
 
-Denomo is a CLI utility that helps with deleting nested `node_modules` directories
+**Denomo** is a CLI utility that deletes nested `node_modules` directories
 
 ### Use case
 
@@ -12,7 +12,7 @@ And the best way to do that is to compress it into a single file
 
 But you don't want to include all of the `node_modules`, so now you have to delete them manually
 
-Denomo can help with that
+Denomo can help you with that
 
 ### Install
 
@@ -24,13 +24,13 @@ npm i -g denomo-cli
 
 ### Usage
 
-Run Denomo from the Terminal:
+Run Denomo from the terminal:
 
 ```shell script
 denomo ~/path/to/projects
 ```
 
-The command above will delete all of the nested `node_modules` directories from `~/path/to/projects` path
+The command above will delete all of the nested `node_modules` directories from `~/path/to/projects`
 
 Full path to the initial directory works as well:
 
@@ -46,7 +46,7 @@ Done in 684 ms
 
 ### Performance
 
-Current implementation utilizes all of the available cores / threads (obtained with `os.cpus().length`)
+Current implementation utilizes all of the available cores (number obtained with `os.cpus().length`)
 
 This helps with the recursive directory parsing and allows Denomo to parse several directories at the same time
 
@@ -56,7 +56,32 @@ This module interacts with the filesystem and deletes files. Be careful when run
 
 The `/` path will not be processed (just in case)
 
+### Testing
+
+Deploy the project locally:
+
+```shell script
+git clone https://github.com/julyskies/denomo-cli
+cd ./denomo-cli
+nvm use 14
+npm i
+```
+
+Run the tests:
+
+```shell script
+npm run test
+```
+
+Using [Mocha](https://mochajs.org) & [Chai](https://www.chaijs.com)
+
 ### Linting
+
+After deploying the project and installing the modules you can do the linting:
+
+```shell script
+npm run lint
+```
 
 Using [ESLint](https://www.npmjs.com/package/eslint)
 
