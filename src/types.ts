@@ -9,3 +9,8 @@ export interface MessageToWorker {
 export interface NodeError extends Error {
   code: string;
 }
+
+export interface TestingError {
+  code: number | null;
+  error: Buffer;
+}

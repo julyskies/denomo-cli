@@ -64,7 +64,10 @@ function handler(type: string, payload: ChildProcess | string[]): never | void {
 export default async function main(): Promise<Error | void> {
   START_TIME = Date.now();
 
-  const [, , entryPoint] = process.argv;
+  const [, , entryPoint = ''] = process.argv;
+  if (!entryPoint) {
+    throw new Error(ERROR_MESSAGES.pleaseProvideThePath);
+  }
   if (entryPoint === '/') {
     throw new Error(ERROR_MESSAGES.systemRootIsNotAValidPath);
   }
@@ -102,5 +105,7 @@ export default async function main(): Promise<Error | void> {
       ),
     );
     WORKERS.push(entryWorker);
+  } else {
+    throw new Error(ERROR_MESSAGES.providedPathIsInvalid);
   }
 }

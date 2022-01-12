@@ -1,5 +1,6 @@
 # Directories
 src/
+build/tests
 
 # Files
 .env
