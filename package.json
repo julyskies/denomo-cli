@@ -27,6 +27,9 @@
   "engines": {
     "node": ">=14.14.0"
   },
+  "bugs": {
+    "url": "https://github.com/julyskies/denomo-cli/issues"
+  },
   "keywords": [
     "Denomo",
     "Node modules",
