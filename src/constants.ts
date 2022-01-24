@@ -1,4 +1,5 @@
 export const ERROR_MESSAGES = {
+  couldNotAccessTheModule: 'Could not access the module!',
   couldNotAccessTheProvidedPath: 'Could not access the provided path!',
   pathIsRequired: 'Path is required!',
   pleaseProvideThePath: 'Please provide the path!',

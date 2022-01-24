@@ -1,15 +1,19 @@
-import { ChildProcess, fork } from 'child_process';
+import { ChildProcess, exec, fork } from 'child_process';
 import { cpus } from 'os';
+import { promisify } from 'util';
 import { stat } from 'fs/promises';
 
 import { ERROR_MESSAGES, HANDLER_TYPES } from './constants';
 import logger from './logger';
 import { MessageToParent, NodeError } from './types';
 
+const execPromise = promisify(exec);
+
 const DIRECTORIES: string[] = [];
 const MAX_WORKERS: number = cpus().length;
 
 let START_TIME: number;
+let WORKER_PATH: string;
 let WORKERS: ChildProcess[] = [];
 
 /**
@@ -34,7 +38,7 @@ function handler(type: string, payload: ChildProcess | string[]): never | void {
 
     // eslint-disable-next-line
     for (const path of paths) {
-      const newWorker = fork(`${process.cwd()}/build/worker.js`);
+      const newWorker = fork(WORKER_PATH);
       newWorker.send({ path });
       newWorker.on(
         HANDLER_TYPES.close,
@@ -64,6 +68,18 @@ function handler(type: string, payload: ChildProcess | string[]): never | void {
 export default async function main(): Promise<Error | void> {
   START_TIME = Date.now();
 
+  try {
+    const { stdout = '', stderr = '' } = await execPromise('npm root -g');
+    if (stderr || !stdout) {
+      throw new Error(ERROR_MESSAGES.couldNotAccessTheModule);
+    }
+    WORKER_PATH = process.env.TESTING
+      ? `${process.cwd()}/build/worker.js`
+      : `${stdout.trim()}/denomo-cli/build/worker.js`;
+  } catch {
+    throw new Error(ERROR_MESSAGES.couldNotAccessTheModule);
+  }
+
   const [, , entryPoint = ''] = process.argv;
   if (!entryPoint) {
     throw new Error(ERROR_MESSAGES.pleaseProvideThePath);
@@ -90,7 +106,7 @@ export default async function main(): Promise<Error | void> {
   }
 
   if (DIRECTORIES.length > 0) {
-    const entryWorker = fork(`${process.cwd()}/build/worker.js`);
+    const entryWorker = fork(WORKER_PATH);
     entryWorker.send({ path: DIRECTORIES[0] });
     DIRECTORIES.splice(0);
     entryWorker.on(

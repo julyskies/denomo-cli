@@ -1,7 +1,7 @@
 {
   "name": "denomo-cli",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Denomo is a CLI utility that deletes nested 'node_modules' directories",
   "author": {
     "name": "Peter Dyumin",
@@ -16,7 +16,7 @@
     "lint": "eslint",
     "prepublishOnly": "npm run build",
     "pretest": "npm run build",
-    "test": "mocha \"build/tests/*.spec.js\""
+    "test": "cross-env TESTING=true mocha \"build/tests/*.spec.js\""
   },
   "homepage": "https://github.com/julyskies/denomo-cli",
   "license": "MIT",
@@ -42,6 +42,7 @@
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "chai": "^4.3.4",
+    "cross-env": "^7.0.3",
     "eslint": "^8.6.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.4",
